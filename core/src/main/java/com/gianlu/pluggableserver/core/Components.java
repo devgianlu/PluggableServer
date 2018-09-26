@@ -122,10 +122,10 @@ public class Components {
             try {
                 // noinspection unchecked
                 Class<BaseComponent> clazz = (Class<BaseComponent>) classLoader.loadClass(config.get(COMPONENT_ENTRY_CLASS_KEY));
-                component = clazz.newInstance();
+                component = clazz.getConstructor(Map.class).newInstance(config);
 
                 LOGGER.info("Initialized " + domain);
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | ClassCastException ex) {
+            } catch (ReflectiveOperationException ex) {
                 LOGGER.fatal(String.format("Failed initializing %s!", domain), ex);
             }
         }
@@ -133,7 +133,7 @@ public class Components {
         private boolean start() {
             if (component == null) return false;
 
-            handlers.put(domain, component.createHandler(config));
+            handlers.put(domain, component.getHandler());
 
             component.start();
             started = true;

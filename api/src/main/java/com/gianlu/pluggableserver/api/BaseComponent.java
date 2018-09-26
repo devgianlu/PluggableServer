@@ -9,11 +9,11 @@ import java.util.Map;
  * @author Gianlu
  */
 public abstract class BaseComponent {
-    public BaseComponent() {
+    public BaseComponent(@NotNull Map<String, String> config) {
     }
 
     @NotNull
-    public abstract HttpHandler createHandler(@NotNull Map<String, String> config);
+    public abstract HttpHandler getHandler();
 
     /**
      * Start this component.
@@ -21,7 +21,7 @@ public abstract class BaseComponent {
     public abstract void start();
 
     /**
-     * Stop this component, {@link #start()} won't be called again.
+     * Stop this component, {@link #start()} may be called again.
      */
     public abstract void stop();
 }
