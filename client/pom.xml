@@ -9,11 +9,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>core</artifactId>
-    <version>0.0.2</version>
+    <artifactId>client</artifactId>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
-    <name>PluggableServerCore</name>
+    <name>PluggableServerClient</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +22,7 @@
     </properties>
 
     <build>
-        <finalName>PluggableServerCore</finalName>
+        <finalName>PluggableServerClient</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,7 +36,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.gianlu.pluggableserver.core.Main</mainClass>
+                                    <mainClass>com.gianlu.pluggableserver.client.Main</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
@@ -50,13 +50,6 @@
     </build>
 
     <dependencies>
-        <!-- API -->
-        <dependency>
-            <groupId>com.gianlu.pluggableserver</groupId>
-            <artifactId>api</artifactId>
-            <version>0.0.3</version>
-        </dependency>
-
         <!-- HTTP stuff -->
         <dependency>
             <groupId>io.undertow</groupId>

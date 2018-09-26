@@ -14,5 +14,6 @@
     <modules>
         <module>core</module>
         <module>api</module>
+        <module>client</module>
     </modules>
 </project>
