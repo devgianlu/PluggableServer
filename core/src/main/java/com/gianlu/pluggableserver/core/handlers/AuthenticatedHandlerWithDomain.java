@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.core.handlers;
 
-import com.gianlu.pluggableserver.core.Utils;
+import com.gianlu.pluggableserver.core.CoreUtils;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.StatusCodes;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +14,7 @@ public abstract class AuthenticatedHandlerWithDomain extends AuthenticatedHandle
 
     @Override
     public final void handleAuthenticated(@NotNull HttpServerExchange exchange) throws Exception {
-        String domain = Utils.getParam(exchange, "domain");
+        String domain = CoreUtils.getParam(exchange, "domain");
         if (domain == null) {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
             exchange.getResponseSender().send("MISSING_DOMAIN");

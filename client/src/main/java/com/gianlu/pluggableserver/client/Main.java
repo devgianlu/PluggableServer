@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.client;
 
-import com.sun.istack.internal.NotNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileInputStream;
 import java.io.IOException;

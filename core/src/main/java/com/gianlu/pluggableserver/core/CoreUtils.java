@@ -9,9 +9,9 @@ import java.util.Deque;
 /**
  * @author Gianlu
  */
-public final class Utils {
+public final class CoreUtils {
 
-    private Utils() {
+    private CoreUtils() {
     }
 
     @Nullable
@@ -19,5 +19,11 @@ public final class Utils {
         Deque<String> param = exchange.getQueryParameters().get(name);
         if (param == null) return null;
         else return param.getFirst();
+    }
+
+    public static String getEnv(@NotNull String name, String fallback) {
+        String env = System.getenv(name);
+        if (env == null || env.isEmpty()) return fallback;
+        return env;
     }
 }

@@ -1,7 +1,7 @@
 package com.gianlu.pluggableserver.core.handlers;
 
 import com.gianlu.pluggableserver.core.Components;
-import com.gianlu.pluggableserver.core.Utils;
+import com.gianlu.pluggableserver.core.CoreUtils;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.StatusCodes;
 import org.jetbrains.annotations.NotNull;
@@ -18,14 +18,14 @@ public class SetConfigHandler extends AuthenticatedHandlerWithDomain {
 
     @Override
     public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String domain) {
-        String key = Utils.getParam(exchange, "key");
+        String key = CoreUtils.getParam(exchange, "key");
         if (key == null) {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
             exchange.getResponseSender().send("MISSING_KEY");
             return;
         }
 
-        String value = Utils.getParam(exchange, "value");
+        String value = CoreUtils.getParam(exchange, "value");
         if (value == null) {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
             exchange.getResponseSender().send("MISSING_VALUE");

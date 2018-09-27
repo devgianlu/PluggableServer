@@ -3,9 +3,9 @@ package com.gianlu.pluggableserver.api;
 /**
  * @author Gianlu
  */
-public final class Utils {
+public final class ApiUtils {
 
-    private Utils() {
+    private ApiUtils() {
     }
 
     public static int getEnvPort(int fallback) {

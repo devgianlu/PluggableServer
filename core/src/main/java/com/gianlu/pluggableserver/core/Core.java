@@ -1,11 +1,11 @@
 package com.gianlu.pluggableserver.core;
 
-import com.gianlu.pluggableserver.api.Utils;
+import com.gianlu.pluggableserver.api.ApiUtils;
 import com.gianlu.pluggableserver.core.handlers.*;
 import io.undertow.Undertow;
 import io.undertow.server.RoutingHandler;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Gianlu
@@ -17,9 +17,11 @@ public class Core {
     private final int port;
     private final String apiUrl;
 
-    public Core(@NotNull String apiUrl) {
-        this.apiUrl = apiUrl;
-        this.port = Utils.getEnvPort(80);
+    public Core(@Nullable String apiUrl) {
+        this.apiUrl = CoreUtils.getEnv("API_URL", apiUrl);
+        if (this.apiUrl == null) throw new IllegalArgumentException("Missing API URL!");
+
+        this.port = ApiUtils.getEnvPort(80);
         this.components = new Components();
         this.undertow = Undertow.builder()
                 .addHttpListener(port, "0.0.0.0")
