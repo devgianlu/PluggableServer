@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -20,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author Gianlu
@@ -52,7 +55,7 @@ public class Components {
     }
 
     public void loadComponent(@NotNull String domain, @NotNull Path path) throws IOException {
-        File file = new File(componentsDir, domain);
+        File file = new File(componentsDir, domain + ".jar");
         Files.copy(path, new FileOutputStream(file));
         components.put(domain, new InternalComponent(domain, file));
         LOGGER.info("Loaded " + domain);
@@ -96,19 +99,72 @@ public class Components {
         else return component.config;
     }
 
+    @Nullable
+    public String uploadData(@NotNull String domain, @NotNull Path path, @NotNull String filename, boolean zipped) {
+        InternalComponent component = components.get(domain);
+        if (component == null) return null;
+
+        try {
+            if (zipped) {
+                byte[] buffer = new byte[2048];
+                try (ZipInputStream in = new ZipInputStream(new FileInputStream(path.toFile()))) {
+                    ZipEntry entry;
+                    while ((entry = in.getNextEntry()) != null) {
+                        if (entry.isDirectory())
+                            continue;
+
+                        File file = new File(component.dataDir, entry.getName());
+                        LOGGER.info("Extracting " + file.getAbsolutePath());
+                        if (!file.getParentFile().mkdirs())
+                            LOGGER.warn("Failed creating directories: " + file.getAbsolutePath());
+
+                        try (FileOutputStream out = new FileOutputStream(file)) {
+                            int read;
+                            while ((read = in.read(buffer)) != -1)
+                                out.write(buffer, 0, read);
+                        }
+                    }
+                }
+
+                return component.dataDir.getPath();
+            } else {
+                if (!component.dataDir.exists())
+                    if (!component.dataDir.mkdir())
+                        LOGGER.warn("Failed creating data directory for " + component.domain);
+
+                File file = new File(component.dataDir, filename);
+                Files.copy(path, new FileOutputStream(file));
+                return file.getPath();
+            }
+        } catch (IOException ex) {
+            LOGGER.fatal("Failed uploading data for " + domain, ex);
+            return null;
+        }
+    }
+
+    public boolean canLoad(@NotNull String domain) {
+        if (hasComponent(domain)) {
+            InternalComponent component = components.get(domain);
+            return !component.started;
+        } else {
+            return true;
+        }
+    }
+
     private class InternalComponent {
         private final ClassLoader classLoader;
         private final Map<String, String> config;
         private final String domain;
-        private final File jarFile;
+        private final File dataDir;
         private boolean started = false;
         private BaseComponent component;
 
         private InternalComponent(@NotNull String domain, @NotNull File jarFile) throws MalformedURLException {
-            this.jarFile = jarFile;
             this.domain = domain;
             this.config = new HashMap<>();
             this.classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, Components.class.getClassLoader());
+
+            this.dataDir = new File(componentsDir, domain);
         }
 
         private void putConfig(@NotNull String key, @NotNull String value) {
@@ -142,18 +198,13 @@ public class Components {
         }
 
         private void stop() {
+            if (component == null) return;
+
             handlers.remove(domain);
-            if (component != null) {
-                component.stop();
-                component = null;
-            }
+            component.stop();
 
             started = false;
             LOGGER.info("Stopped " + domain);
-
-            components.remove(domain);
-            if (!jarFile.delete())
-                LOGGER.warn("Couldn't delete file for " + domain);
         }
     }
 

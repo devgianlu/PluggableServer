@@ -38,6 +38,7 @@ public class Core {
                 .get("/{domain}/GetConfig", new GetConfigHandler(components))
                 .get("/{domain}/StartComponent", new StartComponentHandler(components))
                 .get("/{domain}/StopComponent", new StopComponentHandler(components))
+                .put("/{domain}/UploadData", new UploadDataHandler(components))
                 .put("/{domain}/UploadComponent", new UploadComponentHandler(components));
 
         components.addHandler(apiUrl, router);

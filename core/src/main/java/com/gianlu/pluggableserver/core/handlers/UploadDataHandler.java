@@ -11,21 +11,15 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class UploadComponentHandler extends AuthenticatedHandlerWithDomain {
+public class UploadDataHandler extends AuthenticatedHandlerWithDomain {
     private final Components components;
 
-    public UploadComponentHandler(Components components) {
+    public UploadDataHandler(@NotNull Components components) {
         this.components = components;
     }
 
     @Override
     public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String domain) throws Exception {
-        if (!components.canLoad(domain)) {
-            exchange.setStatusCode(StatusCodes.ACCEPTED);
-            exchange.getResponseSender().send("CANNOT_LOAD");
-            return;
-        }
-
         if (exchange.isInIoThread()) {
             exchange.dispatch(this);
             exchange.startBlocking();
@@ -34,17 +28,22 @@ public class UploadComponentHandler extends AuthenticatedHandlerWithDomain {
 
         try (FormDataParser parser = FormParserFactory.builder().build().createParser(exchange)) {
             FormData data = parser.parseBlocking();
-            FormData.FormValue file = data.getFirst("jar");
+            FormData.FormValue file = data.getFirst("file");
             if (file == null) {
                 exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-                exchange.getResponseSender().send("MISSING_JAR");
+                exchange.getResponseSender().send("MISSING_FILE");
                 return;
             }
 
             if (file.isFile()) {
-                components.loadComponent(domain, file.getPath());
-                exchange.setStatusCode(StatusCodes.OK);
-                exchange.getResponseSender().send("OK");
+                String path = components.uploadData(domain, file.getPath(), file.getFileName(), Boolean.parseBoolean(data.getFirst("zipped").getValue()));
+                if (path != null) {
+                    exchange.setStatusCode(StatusCodes.OK);
+                    exchange.getResponseSender().send(path);
+                } else {
+                    exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
+                    exchange.getResponseSender().send("FAILED");
+                }
             } else {
                 exchange.setStatusCode(StatusCodes.BAD_REQUEST);
                 exchange.getResponseSender().send("NOT_A_FILE");

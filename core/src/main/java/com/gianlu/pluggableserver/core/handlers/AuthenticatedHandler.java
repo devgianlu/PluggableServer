@@ -3,7 +3,6 @@ package com.gianlu.pluggableserver.core.handlers;
 import com.gianlu.pluggableserver.core.TokenHolder;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.Cookie;
 import io.undertow.util.StatusCodes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,8 +17,7 @@ public abstract class AuthenticatedHandler implements HttpHandler {
     private static String findToken(@NotNull HttpServerExchange exchange) {
         String token;
 
-        Cookie c = exchange.getRequestCookies().get("Pluggable-Token");
-        token = c != null ? c.getValue() : null;
+        token = exchange.getRequestHeaders().getFirst("Pluggable-Token");
         if (token != null) return token;
 
         Deque<String> d = exchange.getQueryParameters().get("token");
