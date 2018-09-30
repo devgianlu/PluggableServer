@@ -45,15 +45,19 @@ public class Main {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.listComponents());
-            } else if (line.equals("state")) {
+            } else if (line.equals("getState")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.getState());
+            } else if (line.equals("uploadToCloud")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+
+                out.println(client.uploadToCloud());
             } else if (line.startsWith("domain")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 domain = line.split("\\s")[1].trim();
-            } else if (line.equals("destroy")) {
+            } else if (line.equals("destroyState")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.destroyState());

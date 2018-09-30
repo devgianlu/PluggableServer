@@ -9,10 +9,10 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class GetState extends AuthenticatedHandler {
+public class GetStateHandler extends AuthenticatedHandler {
     private final StateListener listener;
 
-    public GetState(StateListener listener) {
+    public GetStateHandler(StateListener listener) {
         this.listener = listener;
     }
 

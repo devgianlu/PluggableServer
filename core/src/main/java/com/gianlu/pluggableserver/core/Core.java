@@ -24,8 +24,9 @@ public class Core implements StateListener {
     private final int port;
     private final String apiUrl;
     private final File stateFile;
+    private final CloudStorageApi storageApi;
 
-    public Core(@Nullable String apiUrl, @Nullable String stateFile) throws IOException {
+    public Core(@Nullable String apiUrl, @Nullable String stateFile, @Nullable String firebaseProjectId, @Nullable String firebaseCredentialsJson) throws IOException {
         this.apiUrl = CoreUtils.getEnv("API_URL", apiUrl);
         if (this.apiUrl == null)
             throw new IllegalArgumentException("Missing API URL!");
@@ -33,6 +34,11 @@ public class Core implements StateListener {
         this.stateFile = new File(CoreUtils.getEnv("STATE_FILE", stateFile));
         if (!this.stateFile.exists() && !this.stateFile.createNewFile())
             throw new IOException("Cannot create state file!");
+
+        firebaseProjectId = CoreUtils.getEnv("FIREBASE_PROJECT_ID", firebaseProjectId);
+        firebaseCredentialsJson = CoreUtils.getEnv("FIREBASE_CREDENTIALS_JSON", firebaseCredentialsJson);
+
+        this.storageApi = new CloudStorageApi(firebaseProjectId, firebaseCredentialsJson);
 
         this.port = ApiUtils.getEnvPort(80);
         this.components = new Components(this);
@@ -47,6 +53,9 @@ public class Core implements StateListener {
     }
 
     private void resumeFromState() {
+        storageApi.getState(stateFile);
+        storageApi.getComponents(components.componentsDir);
+
         JsonArray array = readStateJson();
         if (array == null) return;
 
@@ -80,6 +89,9 @@ public class Core implements StateListener {
         } else {
             LOGGER.info("State file removed successfully!");
         }
+
+        storageApi.destroyState();
+        storageApi.destroyComponents();
     }
 
     @Override
@@ -103,11 +115,24 @@ public class Core implements StateListener {
         }
     }
 
+    @Override
+    public boolean uploadToCloud() {
+        try {
+            storageApi.uploadState(stateFile);
+            storageApi.uploadComponents(components.componentsDir);
+            return true;
+        } catch (IOException ex) {
+            LOGGER.fatal("Failed resuming state from file!", ex);
+            return false;
+        }
+    }
+
     private void addBaseApiHandlers() {
         RoutingHandler router = new RoutingHandler();
         router.get("/", new OkHandler())
                 .get("/GenerateToken", new GenerateTokenHandler())
-                .get("/GetState", new GetState(this))
+                .get("/GetState", new GetStateHandler(this))
+                .get("/UploadToCloud", new UploadToCloudHandler(this))
                 .delete("/DestroyState", new DestroyStateHandler(this))
                 .get("/ListComponents", new ListComponentsHandler(components))
                 .get("/{domain}/SetConfig", new SetConfigHandler(components))

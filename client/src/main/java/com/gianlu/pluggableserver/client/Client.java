@@ -57,6 +57,11 @@ public class Client {
     }
 
     @NotNull
+    public String uploadToCloud() throws IOException {
+        return requestSync(new HttpGet(url + "/UploadToCloud"));
+    }
+
+    @NotNull
     public String listComponents() throws IOException {
         return requestSync(new HttpGet(url + "/ListComponents"));
     }

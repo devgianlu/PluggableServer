@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * @author Gianlu
@@ -35,7 +32,7 @@ public class Components {
     private final Handler handler;
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalComponent> components;
-    private final File componentsDir;
+    public final File componentsDir;
     private final StateListener state;
 
     Components(@NotNull StateListener state) {
@@ -123,26 +120,7 @@ public class Components {
 
         try {
             if (zipped) {
-                byte[] buffer = new byte[2048];
-                try (ZipInputStream in = new ZipInputStream(new FileInputStream(path.toFile()))) {
-                    ZipEntry entry;
-                    while ((entry = in.getNextEntry()) != null) {
-                        if (entry.isDirectory())
-                            continue;
-
-                        File file = new File(component.dataDir, entry.getName());
-                        LOGGER.info("Extracting " + file.getAbsolutePath());
-                        if (!file.getParentFile().mkdirs())
-                            LOGGER.warn("Failed creating directories: " + file.getAbsolutePath());
-
-                        try (FileOutputStream out = new FileOutputStream(file)) {
-                            int read;
-                            while ((read = in.read(buffer)) != -1)
-                                out.write(buffer, 0, read);
-                        }
-                    }
-                }
-
+                CoreUtils.unzip(path.toFile(), component.dataDir, LOGGER);
                 return component.dataDir.getPath();
             } else {
                 if (!component.dataDir.exists())

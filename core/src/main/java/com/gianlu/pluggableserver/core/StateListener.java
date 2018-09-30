@@ -13,4 +13,6 @@ public interface StateListener {
 
     @Nullable
     JsonArray readStateJson();
+
+    boolean uploadToCloud();
 }
