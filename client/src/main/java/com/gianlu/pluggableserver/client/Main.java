@@ -13,7 +13,7 @@ import java.util.Scanner;
  */
 public class Main {
 
-    private static void handle(@NotNull InputStream in, InputStream tokenIn, @NotNull PrintStream out) throws IOException {
+    private static void handle(@NotNull InputStream in, @NotNull InputStream tokenIn, @NotNull PrintStream out) throws IOException {
         Scanner tokenScanner = new Scanner(tokenIn);
 
         Scanner scanner = new Scanner(in);
@@ -49,6 +49,10 @@ public class Main {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 domain = line.split("\\s")[1].trim();
+            } else if (line.equals("destroy")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+
+                out.println(client.destroyState());
             } else if (line.equals("start")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
                 if (domain == null) throw new IllegalStateException("Domain not selected!");

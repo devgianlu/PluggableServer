@@ -36,9 +36,9 @@ public class Components {
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalComponent> components;
     private final File componentsDir;
-    private final SaveState state;
+    private final StateListener state;
 
-    Components(@NotNull SaveState state) {
+    Components(@NotNull StateListener state) {
         this.state = state;
 
         this.componentsDir = new File("./components");
@@ -175,9 +175,6 @@ public class Components {
         return array;
     }
 
-    interface SaveState {
-        void saveState();
-    }
 
     private class InternalComponent {
         private final ClassLoader classLoader;

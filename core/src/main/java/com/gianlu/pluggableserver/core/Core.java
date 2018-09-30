@@ -14,7 +14,7 @@ import java.io.*;
 /**
  * @author Gianlu
  */
-public class Core implements Components.SaveState {
+public class Core implements StateListener {
     private static final Logger LOGGER = Logger.getLogger(Core.class);
     private final static JsonParser PARSER = new JsonParser();
     private final Undertow undertow;
@@ -74,10 +74,25 @@ public class Core implements Components.SaveState {
         }
     }
 
+    @Override
+    public void destroyState() {
+        if (!stateFile.delete()) {
+            try (OutputStream out = new FileOutputStream(stateFile)) {
+                out.write('\0');
+                LOGGER.info("State file emptied successfully!");
+            } catch (IOException ex) {
+                LOGGER.warn("Failed emptying state file!", ex);
+            }
+        } else {
+            LOGGER.info("State file removed successfully!");
+        }
+    }
+
     private void addBaseApiHandlers() {
         RoutingHandler router = new RoutingHandler();
         router.get("/", new OkHandler())
                 .get("/GenerateToken", new GenerateTokenHandler())
+                .delete("/DestroyState", new DestroyStateHandler(this))
                 .get("/ListComponents", new ListComponentsHandler(components))
                 .get("/{domain}/SetConfig", new SetConfigHandler(components))
                 .get("/{domain}/GetConfig", new GetConfigHandler(components))

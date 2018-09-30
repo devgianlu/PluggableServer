@@ -2,6 +2,7 @@ package com.gianlu.pluggableserver.client;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -56,6 +57,11 @@ public class Client {
     }
 
     @NotNull
+    public String destroyState() throws IOException {
+        return requestSync(new HttpDelete(url + "/DestroyState"));
+    }
+
+    @NotNull
     public String start(@NotNull String domain) throws IOException {
         return requestSync(new HttpGet(url + "/" + domain + "/StartComponent"));
     }
@@ -83,7 +89,6 @@ public class Client {
                 .build());
 
         return requestSync(put);
-
     }
 
     @NotNull
