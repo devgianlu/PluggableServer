@@ -2,6 +2,7 @@ package com.gianlu.pluggableserver.core;
 
 import com.gianlu.pluggableserver.api.ApiUtils;
 import com.gianlu.pluggableserver.core.handlers.*;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import io.undertow.Undertow;
@@ -10,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.net.MalformedURLException;
 
 /**
  * @author Gianlu
@@ -45,22 +47,14 @@ public class Core implements StateListener {
     }
 
     private void resumeFromState() {
-        try (InputStream in = new FileInputStream(stateFile)) {
-            JsonElement element = PARSER.parse(new InputStreamReader(in));
-            if (element == null) {
-                LOGGER.info("State file is empty!");
-                return;
-            }
+        JsonArray array = readStateJson();
+        if (array == null) return;
 
-            if (!element.isJsonArray()) {
-                LOGGER.info("Corrupted state file: " + element);
-                return;
-            }
-
-            for (JsonElement elm : element.getAsJsonArray())
+        try {
+            for (JsonElement elm : array)
                 components.loadFromState(elm.getAsJsonObject());
-        } catch (IOException ex) {
-            LOGGER.fatal("Failed resuming state from file!", ex);
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -88,10 +82,32 @@ public class Core implements StateListener {
         }
     }
 
+    @Override
+    public JsonArray readStateJson() {
+        try (InputStream in = new FileInputStream(stateFile)) {
+            JsonElement element = PARSER.parse(new InputStreamReader(in));
+            if (element == null) {
+                LOGGER.info("State file is empty!");
+                return null;
+            }
+
+            if (!element.isJsonArray()) {
+                LOGGER.info("Corrupted state file: " + element);
+                return null;
+            }
+
+            return element.getAsJsonArray();
+        } catch (IOException ex) {
+            LOGGER.fatal("Failed resuming state from file!", ex);
+            return null;
+        }
+    }
+
     private void addBaseApiHandlers() {
         RoutingHandler router = new RoutingHandler();
         router.get("/", new OkHandler())
                 .get("/GenerateToken", new GenerateTokenHandler())
+                .get("/GetState", new GetState(this))
                 .delete("/DestroyState", new DestroyStateHandler(this))
                 .get("/ListComponents", new ListComponentsHandler(components))
                 .get("/{domain}/SetConfig", new SetConfigHandler(components))

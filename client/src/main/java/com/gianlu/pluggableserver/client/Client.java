@@ -52,6 +52,11 @@ public class Client {
     }
 
     @NotNull
+    public String getState() throws IOException {
+        return requestSync(new HttpGet(url + "/GetState"));
+    }
+
+    @NotNull
     public String listComponents() throws IOException {
         return requestSync(new HttpGet(url + "/ListComponents"));
     }

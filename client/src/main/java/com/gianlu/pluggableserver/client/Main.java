@@ -45,6 +45,10 @@ public class Main {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.listComponents());
+            } else if (line.equals("state")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+
+                out.println(client.getState());
             } else if (line.startsWith("domain")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
