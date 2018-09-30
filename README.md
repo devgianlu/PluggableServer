@@ -2,4 +2,6 @@
 Did you ever want to create an awesome API but hadn't nowhere to host it because your free hosting service was already in use? Here it comes my solution: **PluggableServer**!
 
 ## How it works
-You can run multiple Undertow-based projects on one server, by simply overriding [BaseComponent](https://github.com/devgianlu/PluggableServer/blob/master/api/src/com/gianlu/pluggableserver/api/BaseComponent.java) and annotating it with [PluggableComponent](https://github.com/devgianlu/PluggableServer/blob/master/api/src/com/gianlu/pluggableserver/api/PluggableComponent.java). Add your project to the classpath and you're done!
+This is designed to run on Heroku and Firebase, and it is not very adaptable. Since Heroku doesn't persist the data trough restarts, Firebase is used to save the data so that it can be downloaded each time.
+
+This repository also includes an useful client to interact with the server.
