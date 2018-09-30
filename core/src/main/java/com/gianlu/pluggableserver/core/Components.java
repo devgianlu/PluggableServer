@@ -1,6 +1,8 @@
 package com.gianlu.pluggableserver.core;
 
 import com.gianlu.pluggableserver.api.BaseComponent;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.StatusCodes;
@@ -34,8 +36,11 @@ public class Components {
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalComponent> components;
     private final File componentsDir;
+    private final SaveState state;
 
-    Components() {
+    Components(@NotNull SaveState state) {
+        this.state = state;
+
         this.componentsDir = new File("./components");
         if (!componentsDir.exists() && !componentsDir.mkdir())
             throw new IllegalStateException("Cannot create components directory!");
@@ -43,6 +48,12 @@ public class Components {
         this.handler = new Handler();
         this.handlers = new HashMap<>();
         this.components = new HashMap<>();
+    }
+
+    void loadFromState(@NotNull JsonObject obj) throws MalformedURLException {
+        String domain = obj.get("domain").getAsString();
+        components.put(domain, new InternalComponent(obj));
+        LOGGER.info("Loaded " + domain + " from state");
     }
 
     @NotNull
@@ -59,6 +70,7 @@ public class Components {
         Files.copy(path, new FileOutputStream(file));
         components.put(domain, new InternalComponent(domain, file));
         LOGGER.info("Loaded " + domain);
+        state.saveState();
     }
 
     public boolean hasComponent(@NotNull String domain) {
@@ -68,12 +80,16 @@ public class Components {
     public boolean startComponent(@NotNull String domain) {
         InternalComponent component = components.get(domain);
         if (component == null) return false;
-        return component.start();
+
+        boolean a = component.start();
+        state.saveState();
+        return a;
     }
 
     public void stopComponent(@NotNull String domain) {
         InternalComponent component = components.get(domain);
         if (component != null) component.stop();
+        state.saveState();
     }
 
     public boolean setConfig(@NotNull String domain, @NotNull String key, @NotNull String value) {
@@ -81,6 +97,7 @@ public class Components {
         if (component == null) return false;
 
         component.putConfig(key, value);
+        state.saveState();
         return true;
     }
 
@@ -151,19 +168,43 @@ public class Components {
         }
     }
 
+    @NotNull
+    public JsonArray stateJson() {
+        JsonArray array = new JsonArray(components.size());
+        for (InternalComponent component : components.values()) array.add(component.stateJson());
+        return array;
+    }
+
+    interface SaveState {
+        void saveState();
+    }
+
     private class InternalComponent {
         private final ClassLoader classLoader;
         private final Map<String, String> config;
         private final String domain;
         private final File dataDir;
+        private final File jarFile;
         private boolean started = false;
         private BaseComponent component;
 
+        private InternalComponent(@NotNull JsonObject obj) throws MalformedURLException {
+            this.domain = obj.get("domain").getAsString();
+            this.config = CoreUtils.toMap(obj.getAsJsonObject("config"));
+            this.jarFile = new File(obj.get("jarPath").getAsString());
+            this.classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, Components.class.getClassLoader());
+            this.dataDir = new File(componentsDir, domain);
+
+            init();
+
+            if (obj.get("started").getAsBoolean()) start();
+        }
+
         private InternalComponent(@NotNull String domain, @NotNull File jarFile) throws MalformedURLException {
             this.domain = domain;
+            this.jarFile = jarFile;
             this.config = new HashMap<>();
             this.classLoader = new URLClassLoader(new URL[]{jarFile.toURI().toURL()}, Components.class.getClassLoader());
-
             this.dataDir = new File(componentsDir, domain);
         }
 
@@ -205,6 +246,16 @@ public class Components {
 
             started = false;
             LOGGER.info("Stopped " + domain);
+        }
+
+        @NotNull
+        JsonObject stateJson() {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("domain", domain);
+            obj.addProperty("jarPath", jarFile.getAbsolutePath());
+            obj.add("config", CoreUtils.toJson(config));
+            obj.addProperty("started", started);
+            return obj;
         }
     }
 
