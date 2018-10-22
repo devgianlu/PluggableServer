@@ -92,6 +92,11 @@ public class Client {
     }
 
     @NotNull
+    public String deleteComponent(@NotNull String domain) throws IOException {
+        return requestSync(new HttpDelete(url + "/" + domain + "/DeleteComponent"));
+    }
+
+    @NotNull
     public String uploadComponent(@NotNull String domain, @NotNull String jarPath) throws IOException {
         HttpPut put = new HttpPut(url + "/" + domain + "/UploadComponent");
         put.setEntity(MultipartEntityBuilder.create()

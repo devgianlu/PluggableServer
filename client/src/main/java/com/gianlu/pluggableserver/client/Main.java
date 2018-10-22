@@ -61,6 +61,11 @@ public class Main {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.destroyState());
+            } else if (line.equals("delete")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+                if (domain == null) throw new IllegalStateException("Domain not selected!");
+
+                out.println(client.deleteComponent(domain));
             } else if (line.equals("start")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
                 if (domain == null) throw new IllegalStateException("Domain not selected!");
