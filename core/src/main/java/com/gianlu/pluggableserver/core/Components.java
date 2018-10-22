@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.FileUtils;
 import io.undertow.util.StatusCodes;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,10 +30,10 @@ import java.util.Map;
 public class Components {
     private final static Logger LOGGER = Logger.getLogger(Components.class);
     private static final String COMPONENT_ENTRY_CLASS_KEY = "pluggable_entryClass";
+    public final File componentsDir;
     private final Handler handler;
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalComponent> components;
-    public final File componentsDir;
     private final StateListener state;
 
     Components(@NotNull StateListener state) {
@@ -153,6 +154,13 @@ public class Components {
         return array;
     }
 
+    public void delete(String domain) {
+        InternalComponent component = components.remove(domain);
+        if (component == null) return;
+
+        component.delete();
+        state.saveState();
+    }
 
     private class InternalComponent {
         private final ClassLoader classLoader;
@@ -221,6 +229,17 @@ public class Components {
 
             started = false;
             LOGGER.info("Stopped " + domain);
+        }
+
+        private void delete() {
+            stop();
+
+            try {
+                if (dataDir.exists()) FileUtils.deleteRecursive(dataDir.toPath());
+                LOGGER.info("Deleted " + component);
+            } catch (IOException ex) {
+                LOGGER.warn("Failed deleting " + component, ex);
+            }
         }
 
         @NotNull

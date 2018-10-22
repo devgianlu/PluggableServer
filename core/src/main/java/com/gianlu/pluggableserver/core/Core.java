@@ -139,6 +139,7 @@ public class Core implements StateListener {
                 .get("/{domain}/GetConfig", new GetConfigHandler(components))
                 .get("/{domain}/StartComponent", new StartComponentHandler(components))
                 .get("/{domain}/StopComponent", new StopComponentHandler(components))
+                .delete("/{domain}/DeleteComponent", new DeleteComponentHandler(components))
                 .put("/{domain}/UploadData", new UploadDataHandler(components))
                 .put("/{domain}/UploadComponent", new UploadComponentHandler(components));
 
