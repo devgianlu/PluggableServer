@@ -17,5 +17,6 @@ public class DeleteComponentHandler extends AuthenticatedHandlerWithDomain {
     @Override
     public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String domain) {
         components.delete(domain);
+        exchange.getResponseSender().send("OK");
     }
 }

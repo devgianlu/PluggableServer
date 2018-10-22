@@ -24,7 +24,7 @@ public class Core implements StateListener {
     private final int port;
     private final String apiUrl;
     private final File stateFile;
-    private final CloudStorageApi storageApi;
+    private final @Nullable CloudStorageApi storageApi;
 
     public Core(@Nullable String apiUrl, @Nullable String stateFile, @Nullable String firebaseProjectId, @Nullable String firebaseCredentialsJson) throws IOException {
         this.apiUrl = CoreUtils.getEnv("API_URL", apiUrl);
@@ -38,7 +38,11 @@ public class Core implements StateListener {
         firebaseProjectId = CoreUtils.getEnv("FIREBASE_PROJECT_ID", firebaseProjectId);
         firebaseCredentialsJson = CoreUtils.getEnv("FIREBASE_CREDENTIALS_JSON", firebaseCredentialsJson);
 
-        this.storageApi = new CloudStorageApi(firebaseProjectId, firebaseCredentialsJson);
+        if (firebaseProjectId != null && firebaseCredentialsJson != null) {
+            this.storageApi = new CloudStorageApi(firebaseProjectId, firebaseCredentialsJson);
+        } else {
+            this.storageApi = null;
+        }
 
         this.port = ApiUtils.getEnvPort(80);
         this.components = new Components(this);
@@ -53,8 +57,10 @@ public class Core implements StateListener {
     }
 
     private void resumeFromState() {
-        storageApi.getState(stateFile);
-        storageApi.getComponents(components.componentsDir);
+        if (storageApi != null) {
+            storageApi.getState(stateFile);
+            storageApi.getComponents(components.componentsDir);
+        }
 
         JsonArray array = readStateJson();
         if (array == null) return;
@@ -90,8 +96,10 @@ public class Core implements StateListener {
             LOGGER.info("State file removed successfully!");
         }
 
-        storageApi.destroyState();
-        storageApi.destroyComponents();
+        if (storageApi != null) {
+            storageApi.destroyState();
+            storageApi.destroyComponents();
+        }
     }
 
     @Override
@@ -117,6 +125,11 @@ public class Core implements StateListener {
 
     @Override
     public boolean uploadToCloud() {
+        if (storageApi == null) {
+            LOGGER.warn("Cloud hasn't been setup!");
+            return false;
+        }
+
         try {
             storageApi.uploadState(stateFile);
             storageApi.uploadComponents(components.componentsDir);

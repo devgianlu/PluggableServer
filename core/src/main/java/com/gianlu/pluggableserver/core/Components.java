@@ -163,7 +163,7 @@ public class Components {
     }
 
     private class InternalComponent {
-        private final ClassLoader classLoader;
+        private final URLClassLoader classLoader;
         private final Map<String, String> config;
         private final String domain;
         private final File dataDir;
@@ -236,6 +236,10 @@ public class Components {
 
             try {
                 if (dataDir.exists()) FileUtils.deleteRecursive(dataDir.toPath());
+
+                classLoader.close();
+                if (jarFile.exists() && !jarFile.delete())
+                    throw new IOException("Failed deleting JAR!"); // This won't usually work
                 LOGGER.info("Deleted " + component);
             } catch (IOException ex) {
                 LOGGER.warn("Failed deleting " + component, ex);
