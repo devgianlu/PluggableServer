@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.core;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -12,7 +12,7 @@ public interface StateListener {
     void destroyState();
 
     @Nullable
-    JsonArray readStateJson();
+    JsonObject readStateJson();
 
     boolean uploadToCloud();
 }

@@ -7,16 +7,16 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class StopComponentHandler extends AuthenticatedHandlerWithAppAndComponentId {
+public class DeleteAppHandler extends AuthenticatedHandlerWithAppId {
     private final Applications applications;
 
-    public StopComponentHandler(@NotNull Applications applications) {
+    public DeleteAppHandler(Applications applications) {
         this.applications = applications;
     }
 
     @Override
-    public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String appId, @NotNull String componentId) {
-        applications.stopComponent(appId, componentId);
+    public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String appId) {
+        applications.deleteApp(appId);
         exchange.getResponseSender().send("OK");
     }
 }

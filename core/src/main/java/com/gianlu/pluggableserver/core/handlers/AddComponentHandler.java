@@ -9,31 +9,25 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class SetConfigHandler extends AuthenticatedHandlerWithAppId {
+public class AddComponentHandler extends AuthenticatedHandlerWithAppId {
     private final Applications applications;
 
-    public SetConfigHandler(@NotNull Applications applications) {
+    public AddComponentHandler(@NotNull Applications applications) {
         this.applications = applications;
     }
 
     @Override
     public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String appId) {
-        String key = CoreUtils.getParam(exchange, "key");
-        if (key == null) {
+        String className = CoreUtils.getParam(exchange, "className");
+        if (className == null) {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseSender().send("MISSING_KEY");
+            exchange.getResponseSender().send("MISSING_CLASS_NAME");
             return;
         }
 
-        String value = CoreUtils.getParam(exchange, "value");
-        if (value == null) {
-            exchange.setStatusCode(StatusCodes.BAD_REQUEST);
-            exchange.getResponseSender().send("MISSING_VALUE");
-            return;
-        }
-
-        if (applications.setConfig(appId, key, value)) {
-            exchange.getResponseSender().send("OK");
+        String componentId = applications.addComponent(appId, className);
+        if (componentId != null) {
+            exchange.getResponseSender().send("OK: " + componentId);
         } else {
             exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR);
             exchange.getResponseSender().send("FAILED");

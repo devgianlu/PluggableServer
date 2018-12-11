@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.core.handlers;
 
-import com.gianlu.pluggableserver.core.Components;
+import com.gianlu.pluggableserver.core.Applications;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.form.FormData;
 import io.undertow.server.handlers.form.FormDataParser;
@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class UploadDataHandler extends AuthenticatedHandlerWithDomain {
-    private final Components components;
+public class UploadDataHandler extends AuthenticatedHandlerWithAppId {
+    private final Applications applications;
 
-    public UploadDataHandler(@NotNull Components components) {
-        this.components = components;
+    public UploadDataHandler(@NotNull Applications applications) {
+        this.applications = applications;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class UploadDataHandler extends AuthenticatedHandlerWithDomain {
             }
 
             if (file.isFile()) {
-                String path = components.uploadData(domain, file.getPath(), file.getFileName(), Boolean.parseBoolean(data.getFirst("zipped").getValue()));
+                String path = applications.uploadData(domain, file.getPath(), file.getFileName(), Boolean.parseBoolean(data.getFirst("zipped").getValue()));
                 if (path != null) {
                     exchange.setStatusCode(StatusCodes.OK);
                     exchange.getResponseSender().send(path);

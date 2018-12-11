@@ -1,5 +1,6 @@
 package com.gianlu.pluggableserver.core.handlers;
 
+import com.gianlu.pluggableserver.core.Applications;
 import com.gianlu.pluggableserver.core.CoreUtils;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.StatusCodes;
@@ -8,12 +9,15 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public abstract class AuthenticatedHandlerWithDomain extends AuthenticatedHandler {
+public class StopListeningHandler extends AuthenticatedHandler {
+    private final Applications applications;
 
-    public abstract void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String domain) throws Exception;
+    public StopListeningHandler(@NotNull Applications applications) {
+        this.applications = applications;
+    }
 
     @Override
-    public final void handleAuthenticated(@NotNull HttpServerExchange exchange) throws Exception {
+    public void handleAuthenticated(@NotNull HttpServerExchange exchange) {
         String domain = CoreUtils.getParam(exchange, "domain");
         if (domain == null) {
             exchange.setStatusCode(StatusCodes.BAD_REQUEST);
@@ -21,6 +25,7 @@ public abstract class AuthenticatedHandlerWithDomain extends AuthenticatedHandle
             return;
         }
 
-        handleAuthenticated(exchange, domain);
+        applications.stopListening(domain);
+        exchange.getResponseSender().send("OK");
     }
 }

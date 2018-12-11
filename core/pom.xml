@@ -5,12 +5,11 @@
     <parent>
         <groupId>com.gianlu.pluggableserver</groupId>
         <artifactId>parent</artifactId>
-        <version>0.3.0</version>
-        <relativePath>../pom.xml</relativePath>
+        <version>0.3.1</version>
+        <relativePath>../</relativePath>
     </parent>
 
     <artifactId>core</artifactId>
-    <version>0.3.1</version>
     <packaging>jar</packaging>
 
     <name>PluggableServerCore</name>
@@ -48,7 +47,7 @@
         <dependency>
             <groupId>com.gianlu.pluggableserver</groupId>
             <artifactId>api</artifactId>
-            <version>0.1.0</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Cloud storage -->

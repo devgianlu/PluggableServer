@@ -4,6 +4,7 @@ import com.gianlu.pluggableserver.api.ApiUtils;
 import com.gianlu.pluggableserver.core.handlers.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.undertow.Undertow;
 import io.undertow.server.RoutingHandler;
@@ -20,7 +21,7 @@ public class Core implements StateListener {
     private static final Logger LOGGER = Logger.getLogger(Core.class);
     private final static JsonParser PARSER = new JsonParser();
     private final Undertow undertow;
-    private final Components components;
+    private final Applications applications;
     private final int port;
     private final String apiUrl;
     private final File stateFile;
@@ -45,29 +46,33 @@ public class Core implements StateListener {
         }
 
         this.port = ApiUtils.getEnvPort(80);
-        this.components = new Components(this);
-        this.undertow = Undertow.builder()
-                .addHttpListener(port, "0.0.0.0")
-                .setHandler(components.handler())
-                .build();
-
+        this.applications = new Applications(this);
+        resumeFromState();
         addBaseApiHandlers();
 
-        resumeFromState();
+        this.undertow = Undertow.builder()
+                .addHttpListener(port, "0.0.0.0")
+                .setHandler(applications.handler())
+                .build();
     }
 
     private void resumeFromState() {
         if (storageApi != null) {
             storageApi.getState(stateFile);
-            storageApi.getComponents(components.componentsDir);
+            storageApi.getComponents(applications.componentsDir);
         }
 
-        JsonArray array = readStateJson();
-        if (array == null) return;
+        JsonObject obj = readStateJson();
+        if (obj == null) return;
 
         try {
-            for (JsonElement elm : array)
-                components.loadFromState(elm.getAsJsonObject());
+            JsonArray apps = obj.getAsJsonArray("apps");
+            for (JsonElement elm : apps)
+                applications.loadAppFromState(elm.getAsJsonObject());
+
+            JsonArray handlers = obj.getAsJsonArray("handlers");
+            for (JsonElement elm : handlers)
+                applications.loadHandlerFromState(elm.getAsJsonObject());
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
@@ -76,7 +81,7 @@ public class Core implements StateListener {
     @Override
     public void saveState() {
         try (OutputStream out = new FileOutputStream(stateFile)) {
-            out.write(components.stateJson().toString().getBytes());
+            out.write(applications.stateJson().toString().getBytes());
             LOGGER.info("State saved successfully!");
         } catch (IOException ex) {
             LOGGER.fatal("Failed saving state to file!", ex);
@@ -103,7 +108,7 @@ public class Core implements StateListener {
     }
 
     @Override
-    public JsonArray readStateJson() {
+    public JsonObject readStateJson() {
         try (InputStream in = new FileInputStream(stateFile)) {
             JsonElement element = PARSER.parse(new InputStreamReader(in));
             if (element == null) {
@@ -111,12 +116,12 @@ public class Core implements StateListener {
                 return null;
             }
 
-            if (!element.isJsonArray()) {
+            if (!element.isJsonObject()) {
                 LOGGER.info("Corrupted state file: " + element);
                 return null;
             }
 
-            return element.getAsJsonArray();
+            return element.getAsJsonObject();
         } catch (IOException ex) {
             LOGGER.fatal("Failed resuming state from file!", ex);
             return null;
@@ -132,7 +137,7 @@ public class Core implements StateListener {
 
         try {
             storageApi.uploadState(stateFile);
-            storageApi.uploadComponents(components.componentsDir);
+            storageApi.uploadComponents(applications.componentsDir);
             return true;
         } catch (IOException ex) {
             LOGGER.fatal("Failed resuming state from file!", ex);
@@ -146,17 +151,20 @@ public class Core implements StateListener {
                 .get("/GenerateToken", new GenerateTokenHandler())
                 .get("/GetState", new GetStateHandler(this))
                 .get("/UploadToCloud", new UploadToCloudHandler(this))
-                .delete("/DestroyState", new DestroyStateHandler(this))
-                .get("/ListComponents", new ListComponentsHandler(components))
-                .get("/{domain}/SetConfig", new SetConfigHandler(components))
-                .get("/{domain}/GetConfig", new GetConfigHandler(components))
-                .get("/{domain}/StartComponent", new StartComponentHandler(components))
-                .get("/{domain}/StopComponent", new StopComponentHandler(components))
-                .delete("/{domain}/DeleteComponent", new DeleteComponentHandler(components))
-                .put("/{domain}/UploadData", new UploadDataHandler(components))
-                .put("/{domain}/UploadComponent", new UploadComponentHandler(components));
+                .get("/DestroyState", new DestroyStateHandler(this))
+                .get("/ListComponents", new ListComponentsHandler(applications))
+                .get("/{appId}/SetConfig", new SetConfigHandler(applications))
+                .get("/{appId}/GetConfig", new GetConfigHandler(applications))
+                .get("/{appId}/{componentId}/StartComponent", new StartComponentHandler(applications))
+                .get("/{appId}/{componentId}/StopComponent", new StopComponentHandler(applications))
+                .get("/{appId}/{className}/AddComponent", new AddComponentHandler(applications))
+                .get("/{appId}/{componentId}/ListenTo/{domain}", new ListenToComponentHandler(applications))
+                .get("/StopListeningTo/{domain}", new StopListeningHandler(applications))
+                .get("/{appId}/DeleteApp", new DeleteAppHandler(applications))
+                .put("/{appId}/UploadData", new UploadDataHandler(applications))
+                .put("/{appId}/UploadApp", new UploadAppHandler(applications));
 
-        components.addHandler(apiUrl, router);
+        applications.addHandler(apiUrl, router);
         LOGGER.info(String.format("Loaded control API at %s.", apiUrl));
     }
 

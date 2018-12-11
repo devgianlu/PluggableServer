@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.core.handlers;
 
-import com.gianlu.pluggableserver.core.Components;
+import com.gianlu.pluggableserver.core.Applications;
 import io.undertow.server.HttpServerExchange;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,20 +8,16 @@ import org.jetbrains.annotations.NotNull;
  * @author Gianlu
  */
 public class ListComponentsHandler extends AuthenticatedHandler {
-    private final Components components;
+    private final Applications applications;
 
-    public ListComponentsHandler(@NotNull Components components) {
-        this.components = components;
+    public ListComponentsHandler(@NotNull Applications applications) {
+        this.applications = applications;
     }
 
     @Override
     public void handleAuthenticated(@NotNull HttpServerExchange exchange) {
         StringBuilder builder = new StringBuilder();
-        builder.append("NAME    STARTED    CONFIG\n");
-
-        for (String str : components.components())
-            builder.append(str).append('\n');
-
+        applications.toString(builder);
         exchange.getResponseSender().send(builder.toString());
     }
 }

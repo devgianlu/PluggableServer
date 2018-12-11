@@ -1,6 +1,6 @@
 package com.gianlu.pluggableserver.core.handlers;
 
-import com.gianlu.pluggableserver.core.Components;
+import com.gianlu.pluggableserver.core.Applications;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.form.FormData;
 import io.undertow.server.handlers.form.FormDataParser;
@@ -11,21 +11,15 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Gianlu
  */
-public class UploadComponentHandler extends AuthenticatedHandlerWithDomain {
-    private final Components components;
+public class UploadAppHandler extends AuthenticatedHandlerWithAppId {
+    private final Applications applications;
 
-    public UploadComponentHandler(Components components) {
-        this.components = components;
+    public UploadAppHandler(Applications applications) {
+        this.applications = applications;
     }
 
     @Override
-    public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String domain) throws Exception {
-        if (!components.canLoad(domain)) {
-            exchange.setStatusCode(StatusCodes.ACCEPTED);
-            exchange.getResponseSender().send("CANNOT_LOAD");
-            return;
-        }
-
+    public void handleAuthenticated(@NotNull HttpServerExchange exchange, @NotNull String appId) throws Exception {
         if (exchange.isInIoThread()) {
             exchange.dispatch(this);
             exchange.startBlocking();
@@ -42,7 +36,7 @@ public class UploadComponentHandler extends AuthenticatedHandlerWithDomain {
             }
 
             if (file.isFile()) {
-                components.loadComponent(domain, file.getPath());
+                applications.loadApp(appId, file.getPath());
                 exchange.setStatusCode(StatusCodes.OK);
                 exchange.getResponseSender().send("OK");
             } else {

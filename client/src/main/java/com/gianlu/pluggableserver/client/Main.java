@@ -18,7 +18,8 @@ public class Main {
 
         Scanner scanner = new Scanner(in);
         Client client = null;
-        String domain = null;
+        String appId = null;
+        String componentId = null;
 
         while (true) {
             out.print("> ");
@@ -28,7 +29,8 @@ public class Main {
             out.println(line);
 
             if (line.equals("quit")) {
-                if (domain != null) domain = null;
+                if (componentId != null) componentId = null;
+                else if (appId != null) appId = null;
                 else break;
             } else if (line.startsWith("connect")) {
                 if (client != null) throw new IllegalStateException("Already connected!");
@@ -53,50 +55,72 @@ public class Main {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.uploadToCloud());
-            } else if (line.startsWith("domain")) {
+            } else if (line.startsWith("appId")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
-                domain = line.split("\\s")[1].trim();
+                appId = line.split("\\s")[1].trim();
+            } else if (line.startsWith("componentId")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
+
+                componentId = line.split("\\s")[1].trim();
             } else if (line.equals("destroyState")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
 
                 out.println(client.destroyState());
             } else if (line.equals("delete")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
 
-                out.println(client.deleteComponent(domain));
+                out.println(client.deleteApp(appId));
+            } else if (line.startsWith("add")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
+
+                out.println(client.addComponent(appId, line.substring(4)));
+            } else if (line.startsWith("listenTo")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
+                if (componentId == null) throw new IllegalStateException("Component not selected!");
+
+                out.println(client.listenTo(appId, componentId, line.substring(9)));
+            } else if (line.startsWith("stopListening")) {
+                if (client == null) throw new IllegalStateException("Not connected!");
+
+                out.println(client.stopListening(line.substring(14)));
             } else if (line.equals("start")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
+                if (componentId == null) throw new IllegalStateException("Component not selected!");
 
-                out.println(client.start(domain));
+                out.println(client.startComponent(appId, componentId));
             } else if (line.equals("stop")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
+                if (componentId == null) throw new IllegalStateException("Component not selected!");
 
-                out.println(client.stop(domain));
+                out.println(client.stopComponent(appId, componentId));
             } else if (line.startsWith("set")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
 
                 String[] split = line.split("\\s");
-                out.println(client.setConfig(domain, split[1], split[2]));
+                out.println(client.setConfig(appId, split[1], split[2]));
             } else if (line.equals("get")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
 
-                out.println(client.getConfig(domain));
+                out.println(client.getConfig(appId));
             } else if (line.startsWith("jar")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
 
-                out.println(client.uploadComponent(domain, line.substring(4)));
+                out.println(client.uploadApp(appId, line.substring(4)));
             } else if (line.startsWith("data")) {
                 if (client == null) throw new IllegalStateException("Not connected!");
-                if (domain == null) throw new IllegalStateException("Domain not selected!");
+                if (appId == null) throw new IllegalStateException("App not selected!");
 
-                out.println(client.uploadData(domain, line.substring(5)));
+                out.println(client.uploadData(appId, line.substring(5)));
             } else {
                 out.println("Unknown command: " + line);
             }

@@ -2,7 +2,6 @@ package com.gianlu.pluggableserver.client;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -68,17 +67,22 @@ public class Client {
 
     @NotNull
     public String destroyState() throws IOException {
-        return requestSync(new HttpDelete(url + "/DestroyState"));
+        return requestSync(new HttpGet(url + "/DestroyState"));
     }
 
     @NotNull
-    public String start(@NotNull String domain) throws IOException {
-        return requestSync(new HttpGet(url + "/" + domain + "/StartComponent"));
+    public String startComponent(@NotNull String appId, @NotNull String componentId) throws IOException {
+        return requestSync(new HttpGet(url + "/" + appId + "/" + componentId + "/StartComponent"));
     }
 
     @NotNull
-    public String stop(@NotNull String domain) throws IOException {
-        return requestSync(new HttpGet(url + "/" + domain + "/StopComponent"));
+    public String stopComponent(@NotNull String appId, @NotNull String componentId) throws IOException {
+        return requestSync(new HttpGet(url + "/" + appId + "/" + componentId + "/StopComponent"));
+    }
+
+    @NotNull
+    public String addComponent(@NotNull String appId, @NotNull String className) throws IOException {
+        return requestSync(new HttpGet(url + "/" + appId + "/" + className + "/AddComponent"));
     }
 
     @NotNull
@@ -92,13 +96,13 @@ public class Client {
     }
 
     @NotNull
-    public String deleteComponent(@NotNull String domain) throws IOException {
-        return requestSync(new HttpDelete(url + "/" + domain + "/DeleteComponent"));
+    public String deleteApp(@NotNull String domain) throws IOException {
+        return requestSync(new HttpGet(url + "/" + domain + "/DeleteApp"));
     }
 
     @NotNull
-    public String uploadComponent(@NotNull String domain, @NotNull String jarPath) throws IOException {
-        HttpPut put = new HttpPut(url + "/" + domain + "/UploadComponent");
+    public String uploadApp(@NotNull String appId, @NotNull String jarPath) throws IOException {
+        HttpPut put = new HttpPut(url + "/" + appId + "/UploadApp");
         put.setEntity(MultipartEntityBuilder.create()
                 .addPart("jar", new FileBody(new File(jarPath)))
                 .build());
@@ -107,15 +111,25 @@ public class Client {
     }
 
     @NotNull
-    public String uploadData(@NotNull String domain, @NotNull String dataPath) throws IOException {
+    public String uploadData(@NotNull String appId, @NotNull String dataPath) throws IOException {
         boolean zipped = dataPath.endsWith(".zip");
 
-        HttpPut put = new HttpPut(url + "/" + domain + "/UploadData");
+        HttpPut put = new HttpPut(url + "/" + appId + "/UploadData");
         put.setEntity(MultipartEntityBuilder.create()
                 .addTextBody("zipped", String.valueOf(zipped))
                 .addPart("file", new FileBody(new File(dataPath)))
                 .build());
 
         return requestSync(put);
+    }
+
+    @NotNull
+    public String listenTo(@NotNull String appId, @NotNull String componentId, @NotNull String domain) throws IOException {
+        return requestSync(new HttpGet(url + "/" + appId + "/" + componentId + "/ListenTo/" + domain));
+    }
+
+    @NotNull
+    public String stopListening(@NotNull String domain) throws IOException {
+        return requestSync(new HttpGet(url + "/StopListeningTo/" + domain));
     }
 }
