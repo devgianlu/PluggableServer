@@ -23,8 +23,14 @@ public class Main {
 
         while (true) {
             out.print("> ");
-            String line = scanner.nextLine();
-            if (line.isEmpty()) continue;
+
+            String line;
+            if (scanner.hasNextLine()) {
+                line = scanner.nextLine();
+                if (line.isEmpty()) continue;
+            } else {
+                break;
+            }
 
             out.println(line);
 
