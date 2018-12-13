@@ -73,6 +73,10 @@ public class Core implements StateListener {
             JsonArray handlers = obj.getAsJsonArray("handlers");
             for (JsonElement elm : handlers)
                 applications.loadHandlerFromState(elm.getAsJsonObject());
+
+            JsonArray redirects = obj.getAsJsonArray("redirects");
+            for (JsonElement elm : redirects)
+                applications.loadRedirectFromState(elm.getAsJsonObject());
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
@@ -165,7 +169,8 @@ public class Core implements StateListener {
                 .put("/{appId}/UploadData", new UploadDataHandler(applications))
                 .put("/{appId}/UploadApp", new UploadAppHandler(applications));
 
-        router.get("/AddRedirect/{regex}/{statusCode}/{location}", new AddRedirectHandler(applications));
+        router.put("/AddRedirect", new AddRedirectHandler(applications))
+                .get("/RemoveRedirect/{id}", new RemoveRedirectHandler(applications));
 
         applications.addHandler(apiUrl, router);
         LOGGER.info(String.format("Loaded control API at %s.", apiUrl));

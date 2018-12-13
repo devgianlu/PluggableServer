@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  */
 public class Applications {
     private final static Logger LOGGER = Logger.getLogger(Applications.class);
-    public final File componentsDir;
+    final File componentsDir;
     private final Handler handler;
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalApplication> applications;
@@ -57,6 +57,10 @@ public class Applications {
 
     void loadHandlerFromState(@NotNull JsonObject obj) {
         componentListenTo(obj.get("appId").getAsString(), obj.get("componentId").getAsString(), obj.get("domain").getAsString());
+    }
+
+    void loadRedirectFromState(@NotNull JsonObject obj) {
+        redirects.entries.add(new RedirectEntry(obj));
     }
 
     @NotNull
@@ -101,6 +105,16 @@ public class Applications {
                 builder.append("    - ").append(entry.getKey())
                         .append(" -> ").append(entry.getValue().toString());
             }
+
+            builder.append('\n');
+        }
+
+        builder.append("REDIRECTS\n");
+        for (RedirectEntry entry : redirects.entries) {
+            builder.append("    - ").append(entry.id)
+                    .append("\n      CODE: ").append(entry.statusCode)
+                    .append("\n      REDIRECT: ").append(entry.pattern.toString())
+                    .append(" -> ").append(entry.location);
 
             builder.append('\n');
         }
@@ -161,6 +175,17 @@ public class Applications {
             }
         }
         obj.add("handlers", handlersArray);
+
+        JsonArray redirectsArray = new JsonArray(redirects.entries.size());
+        for (RedirectEntry entry : redirects.entries) {
+            JsonObject redirectObj = new JsonObject();
+            redirectObj.addProperty("id", entry.id);
+            redirectObj.addProperty("code", entry.statusCode);
+            redirectObj.addProperty("regex", entry.pattern.toString());
+            redirectObj.addProperty("location", entry.location);
+            redirectsArray.add(redirectObj);
+        }
+        obj.add("redirects", redirectsArray);
 
         return obj;
     }
@@ -227,22 +252,41 @@ public class Applications {
         return component == null ? null : component.id();
     }
 
-    public void addRedirect(@NotNull String regex, int code, @NotNull String location) {
-        redirects.entries.add(new RedirectEntry(Pattern.compile(regex), code, location));
+    @NotNull
+    public String addRedirect(@NotNull String regex, int code, @NotNull String location) {
+        RedirectEntry entry = new RedirectEntry(Pattern.compile(regex), code, location);
+        redirects.entries.add(entry);
+        LOGGER.info(String.format("Added redirect from %s to %s.", regex, location));
+        state.saveState();
+        return entry.id;
+    }
+
+    public void removeRedirect(@NotNull String redirectId) {
+        redirects.remove(redirectId);
+        state.saveState();
     }
 
     public static class RedirectEntry {
         final String location;
         final int statusCode;
         private final Pattern pattern;
+        private final String id;
 
         RedirectEntry(@NotNull Pattern pattern, int statusCode, @NotNull String location) {
             this.pattern = pattern;
             this.statusCode = statusCode;
             this.location = location;
+            this.id = UUID.randomUUID().toString();
 
             if (statusCode != StatusCodes.PERMANENT_REDIRECT && statusCode != StatusCodes.TEMPORARY_REDIRECT)
                 throw new IllegalArgumentException("Invalid redirect status code: " + statusCode);
+        }
+
+        RedirectEntry(@NotNull JsonObject obj) {
+            this.pattern = Pattern.compile(obj.get("regex").getAsString());
+            this.id = obj.get("id").getAsString();
+            this.statusCode = obj.get("code").getAsInt();
+            this.location = obj.get("location").getAsString();
         }
 
         boolean matches(@NotNull String url) {
@@ -407,6 +451,17 @@ public class Applications {
             }
 
             return false;
+        }
+
+        void remove(@NotNull String redirectId) {
+            Iterator<RedirectEntry> iterator = entries.iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().id.equals(redirectId)) {
+                    iterator.remove();
+                    LOGGER.info(String.format("Removed redirect %s!", redirectId));
+                    return;
+                }
+            }
         }
     }
 

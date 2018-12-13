@@ -25,6 +25,7 @@ public final class Commands {
         COMMANDS.add(new GetStateCommand());
         COMMANDS.add(new ListCommand());
         COMMANDS.add(new QuitCommand());
+        COMMANDS.add(new RemoveRedirectCommand());
         COMMANDS.add(new SetAppConfigCommand());
         COMMANDS.add(new SetAppIdCommand());
         COMMANDS.add(new SetComponentIdCommand());

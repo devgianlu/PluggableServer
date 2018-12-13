@@ -1,13 +1,16 @@
 package com.gianlu.pluggableserver.client;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Gianlu
@@ -103,7 +108,19 @@ public class Client {
 
     @NotNull
     public String addRedirect(@NotNull @RegExp String regex, @NotNull String statusCode, @NotNull String location) throws IOException {
-        return requestSync(new HttpGet(url + "/AddRedirect/" + regex + "/" + statusCode + "/" + location + "/"));
+        List<NameValuePair> pairs = new ArrayList<>();
+        pairs.add(new BasicNameValuePair("regex", regex));
+        pairs.add(new BasicNameValuePair("statusCode", statusCode));
+        pairs.add(new BasicNameValuePair("location", location));
+
+        HttpPut put = new HttpPut(url + "/AddRedirect");
+        put.setEntity(new UrlEncodedFormEntity(pairs));
+        return requestSync(put);
+    }
+
+    @NotNull
+    public String removeRedirect(@NotNull String redirectId) throws IOException {
+        return requestSync(new HttpGet(url + "/RemoveRedirect/" + redirectId));
     }
 
     @NotNull
