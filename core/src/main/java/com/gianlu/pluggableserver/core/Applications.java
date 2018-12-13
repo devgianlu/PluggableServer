@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.FileUtils;
+import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author Gianlu
@@ -32,6 +34,7 @@ public class Applications {
     private final Map<String, HttpHandler> handlers;
     private final Map<String, InternalApplication> applications;
     private final StateListener state;
+    private final Redirects redirects;
 
     Applications(@NotNull StateListener state) {
         this.state = state;
@@ -43,6 +46,7 @@ public class Applications {
         this.handler = new Handler();
         this.handlers = Collections.synchronizedMap(new HashMap<>());
         this.applications = new HashMap<>();
+        this.redirects = new Redirects();
     }
 
     void loadAppFromState(@NotNull JsonObject obj) throws MalformedURLException {
@@ -223,6 +227,29 @@ public class Applications {
         return component == null ? null : component.id();
     }
 
+    public void addRedirect(@NotNull String regex, int code, @NotNull String location) {
+        redirects.entries.add(new RedirectEntry(Pattern.compile(regex), code, location));
+    }
+
+    public static class RedirectEntry {
+        final String location;
+        final int statusCode;
+        private final Pattern pattern;
+
+        RedirectEntry(@NotNull Pattern pattern, int statusCode, @NotNull String location) {
+            this.pattern = pattern;
+            this.statusCode = statusCode;
+            this.location = location;
+
+            if (statusCode != StatusCodes.PERMANENT_REDIRECT && statusCode != StatusCodes.TEMPORARY_REDIRECT)
+                throw new IllegalArgumentException("Invalid redirect status code: " + statusCode);
+        }
+
+        boolean matches(@NotNull String url) {
+            return pattern.matcher(url).matches();
+        }
+    }
+
     private class InternalApplication {
         private final URLClassLoader classLoader;
         private final Map<String, String> config;
@@ -364,6 +391,25 @@ public class Applications {
         }
     }
 
+    private class Redirects {
+        private final List<RedirectEntry> entries = new ArrayList<>();
+
+        boolean handle(@NotNull HttpServerExchange exchange) {
+            String url = exchange.getRequestURL();
+
+            for (RedirectEntry entry : entries) {
+                if (entry.matches(url)) {
+                    exchange.setStatusCode(entry.statusCode);
+                    exchange.getResponseHeaders().add(Headers.LOCATION, entry.location);
+                    LOGGER.trace("Redirecting to " + entry.location);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     private class Handler implements HttpHandler {
 
         @Override
@@ -372,6 +418,11 @@ public class Applications {
             if (host == null) {
                 LOGGER.trace("Missing Host header.");
                 exchange.setStatusCode(StatusCodes.BAD_REQUEST);
+                return;
+            }
+
+            if (redirects.handle(exchange)) {
+                exchange.endExchange();
                 return;
             }
 

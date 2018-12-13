@@ -151,8 +151,9 @@ public class Core implements StateListener {
                 .get("/GenerateToken", new GenerateTokenHandler())
                 .get("/GetState", new GetStateHandler(this))
                 .get("/UploadToCloud", new UploadToCloudHandler(this))
-                .get("/DestroyState", new DestroyStateHandler(this))
-                .get("/ListComponents", new ListComponentsHandler(applications))
+                .get("/DestroyState", new DestroyStateHandler(this));
+
+        router.get("/ListComponents", new ListComponentsHandler(applications))
                 .get("/{appId}/SetConfig", new SetConfigHandler(applications))
                 .get("/{appId}/GetConfig", new GetConfigHandler(applications))
                 .get("/{appId}/{componentId}/StartComponent", new StartComponentHandler(applications))
@@ -163,6 +164,8 @@ public class Core implements StateListener {
                 .get("/{appId}/DeleteApp", new DeleteAppHandler(applications))
                 .put("/{appId}/UploadData", new UploadDataHandler(applications))
                 .put("/{appId}/UploadApp", new UploadAppHandler(applications));
+
+        router.get("/AddRedirect/{regex}/{statusCode}/{location}", new AddRedirectHandler(applications));
 
         applications.addHandler(apiUrl, router);
         LOGGER.info(String.format("Loaded control API at %s.", apiUrl));
