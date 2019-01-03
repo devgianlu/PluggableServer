@@ -1,0 +1,10 @@
+{
+  "name": "PluggableServer",
+  "description": "Run multiple Undertow instances on a single server",
+  "repository": "https://github.com/devgianlu/PluggableServer",
+  "keywords": [
+    "undertow",
+    "java",
+    "server"
+  ]
+}
