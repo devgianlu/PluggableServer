@@ -1,4 +1,7 @@
 # PluggableServer
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 Did you ever want to create an awesome API but hadn't nowhere to host it because your free hosting service was already in use? Here it comes my solution: **PluggableServer**!
 
 ## How it works
