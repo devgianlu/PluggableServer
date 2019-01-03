@@ -200,6 +200,11 @@ public class Client {
         return requestSync(new HttpGet(url + "/StopListeningTo/" + domain));
     }
 
+    @NotNull
+    public String maintenanceOn(@NotNull String domain) throws IOException {
+        return requestSync(new HttpGet(url + "/MaintenanceOn/" + domain));
+    }
+
     public boolean hasToken() {
         return token != null;
     }

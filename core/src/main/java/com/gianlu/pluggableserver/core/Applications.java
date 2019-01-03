@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
  */
 public class Applications {
     private final static Logger LOGGER = Logger.getLogger(Applications.class);
+    private static final MaintenanceHandler MAINTENANCE_HANDLER = new MaintenanceHandler();
     final File componentsDir;
     private final Handler handler;
     private final Map<String, HttpHandler> handlers;
@@ -101,6 +102,9 @@ public class Applications {
             if (entry.getValue() instanceof BaseComponent) {
                 builder.append("    - ").append(entry.getKey())
                         .append(" -> ").append(((BaseComponent) entry.getValue()).id());
+            } else if (entry.getValue() instanceof MaintenanceHandler) {
+                builder.append("    - ").append(entry.getKey())
+                        .append(" -> Maintenance");
             } else {
                 builder.append("    - ").append(entry.getKey())
                         .append(" -> ").append(entry.getValue().toString());
@@ -162,6 +166,7 @@ public class Applications {
         for (InternalApplication app : applications.values()) appsArray.add(app.stateJson());
         obj.add("apps", appsArray);
 
+        JsonArray maintenanceArray = new JsonArray();
         JsonArray handlersArray = new JsonArray(handlers.size());
         for (Map.Entry<String, HttpHandler> entry : handlers.entrySet()) {
             if (entry.getValue() instanceof BaseComponent) {
@@ -172,9 +177,12 @@ public class Applications {
                 handlerObj.addProperty("componentId", component.id());
                 handlerObj.addProperty("domain", entry.getKey());
                 handlersArray.add(handlerObj);
+            } else if (entry.getValue() instanceof MaintenanceHandler) {
+                maintenanceArray.add(entry.getKey());
             }
         }
         obj.add("handlers", handlersArray);
+        obj.add("maintenance", maintenanceArray);
 
         JsonArray redirectsArray = new JsonArray(redirects.entries.size());
         for (RedirectEntry entry : redirects.entries) {
@@ -208,6 +216,10 @@ public class Applications {
         boolean a = app.startComponent(componentId);
         state.saveState();
         return a;
+    }
+
+    public void maintenanceOn(@NotNull String domain) {
+        addHandler(domain, MAINTENANCE_HANDLER);
     }
 
     public void stopComponent(@NotNull String appId, @NotNull String componentId) {
@@ -266,6 +278,7 @@ public class Applications {
         state.saveState();
     }
 
+
     public static class RedirectEntry {
         final String location;
         final int statusCode;
@@ -291,6 +304,15 @@ public class Applications {
 
         boolean matches(@NotNull String url) {
             return pattern.matcher(url).matches();
+        }
+    }
+
+    private static class MaintenanceHandler implements HttpHandler {
+
+        @Override
+        public void handleRequest(HttpServerExchange exchange) {
+            exchange.setStatusCode(503);
+            exchange.setReasonPhrase("Maintenance");
         }
     }
 

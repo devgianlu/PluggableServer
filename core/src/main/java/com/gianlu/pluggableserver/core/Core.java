@@ -77,6 +77,12 @@ public class Core implements StateListener {
             JsonArray redirects = obj.getAsJsonArray("redirects");
             for (JsonElement elm : redirects)
                 applications.loadRedirectFromState(elm.getAsJsonObject());
+
+            JsonArray maintenance = obj.getAsJsonArray("maintenance");
+            if (maintenance != null) {
+                for (JsonElement elm : maintenance)
+                    applications.maintenanceOn(elm.getAsString());
+            }
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
@@ -165,6 +171,7 @@ public class Core implements StateListener {
                 .get("/{appId}/{className}/AddComponent", new AddComponentHandler(applications))
                 .get("/{appId}/{componentId}/ListenTo/{domain}", new ListenToComponentHandler(applications))
                 .get("/StopListeningTo/{domain}", new StopListeningHandler(applications))
+                .get("/MaintenanceOn/{domain}", new MaintenanceOnHandler(applications))
                 .get("/{appId}/DeleteApp", new DeleteAppHandler(applications))
                 .put("/{appId}/UploadData", new UploadDataHandler(applications))
                 .put("/{appId}/UploadApp", new UploadAppHandler(applications));
