@@ -1,12 +1,14 @@
 package com.gianlu.pluggableserver.core;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.*;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.xnio.streams.Streams;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,17 +79,17 @@ public class CloudStorageApi {
         List<String> files = new ArrayList<>();
         listFiles(componentsDir, files);
 
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        try (ZipOutputStream out = new ZipOutputStream(bytes)) {
-            for (String file : files) {
-                out.putNextEntry(new ZipEntry(file.substring(subAt)));
-                try (FileInputStream in = new FileInputStream(file)) {
-                    Streams.copyStream(in, out, false);
+        try (WriteChannel writer = storage.writer(BlobInfo.newBuilder(bucket, "components.zip").build())) {
+            try (ZipOutputStream out = new ZipOutputStream(new WriterOutputStream(writer))) {
+                for (String file : files) {
+                    out.putNextEntry(new ZipEntry(file.substring(subAt)));
+                    try (FileInputStream in = new FileInputStream(file)) {
+                        Streams.copyStream(in, out, false);
+                    }
                 }
             }
         }
 
-        storage.create(BlobInfo.newBuilder(bucket, "components.zip").build(), bytes.toByteArray());
         LOGGER.info("Uploaded components to cloud!");
     }
 
@@ -104,5 +106,23 @@ public class CloudStorageApi {
     public void destroyComponents() {
         storage.delete(BlobId.of(bucket, "components.zip"));
         LOGGER.info("Deleted components from cloud!");
+    }
+
+    private static class WriterOutputStream extends OutputStream {
+        private final WriteChannel channel;
+
+        WriterOutputStream(@NotNull WriteChannel channel) {
+            this.channel = channel;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            channel.write(ByteBuffer.allocate(1).put((byte) b));
+        }
+
+        @Override
+        public void write(@NotNull byte[] b, int off, int len) throws IOException {
+            channel.write(ByteBuffer.wrap(b, off, len));
+        }
     }
 }
