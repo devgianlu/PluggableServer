@@ -117,7 +117,7 @@ public class CloudStorageApi {
 
         @Override
         public void write(int b) throws IOException {
-            channel.write(ByteBuffer.allocate(1).put((byte) b));
+            write(new byte[]{(byte) b}, 0, 1);
         }
 
         @Override
