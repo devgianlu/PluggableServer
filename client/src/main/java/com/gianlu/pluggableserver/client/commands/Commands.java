@@ -36,6 +36,7 @@ public final class Commands {
         COMMANDS.add(new UploadAppCommand());
         COMMANDS.add(new UploadDataCommand());
         COMMANDS.add(new UploadToCloudCommand());
+        COMMANDS.add(new SystemCommand());
     }
 
     private Commands() {

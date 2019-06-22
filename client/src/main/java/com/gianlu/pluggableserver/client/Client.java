@@ -216,4 +216,9 @@ public class Client {
     public boolean hasComponentId() {
         return currentComponentId != null;
     }
+
+    @NotNull
+    public String system() throws IOException {
+        return requestSync(new HttpGet(url + "/System"));
+    }
 }

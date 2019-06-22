@@ -161,6 +161,7 @@ public class Core implements StateListener {
                 .get("/GenerateToken", new GenerateTokenHandler())
                 .get("/GetState", new GetStateHandler(this))
                 .get("/UploadToCloud", new UploadToCloudHandler(this))
+                .get("/System", new SystemHandler())
                 .get("/DestroyState", new DestroyStateHandler(this));
 
         router.get("/ListComponents", new ListComponentsHandler(applications))
