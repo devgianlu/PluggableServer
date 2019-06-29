@@ -54,6 +54,14 @@ public class Core implements StateListener {
                 .addHttpListener(port, "0.0.0.0")
                 .setHandler(applications.handler())
                 .build();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                Core.this.stop();
+                Runtime.getRuntime().removeShutdownHook(this);
+            }
+        });
     }
 
     private void resumeFromState() {
@@ -187,5 +195,12 @@ public class Core implements StateListener {
     public void start() {
         LOGGER.info(String.format("Starting server on port %d!", port));
         undertow.start();
+    }
+
+    public void stop() {
+        LOGGER.info("Stopping server due to SIGTERM.");
+        applications.stop();
+        undertow.stop();
+        System.exit(0);
     }
 }

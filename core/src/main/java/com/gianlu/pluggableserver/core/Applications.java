@@ -278,6 +278,14 @@ public class Applications {
         state.saveState();
     }
 
+    public void stop() {
+        for (String key : handlers.keySet())
+            handlers.put(key, MAINTENANCE_HANDLER);
+
+        for (InternalApplication app : applications.values())
+            app.stop();
+
+    }
 
     public static class RedirectEntry {
         final String location;
@@ -454,6 +462,11 @@ public class Applications {
             } catch (IOException ex) {
                 LOGGER.warn(String.format("Failed deleting %s!", id), ex);
             }
+        }
+
+        void stop() {
+            for (BaseComponent component : components.values())
+                component.stop();
         }
     }
 
