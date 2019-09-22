@@ -57,6 +57,6 @@ public final class Commands {
             }
         }
 
-        throw new IllegalArgumentException("Unknown command: " + line);
+        System.out.println("Unknown command: " + line);
     }
 }
