@@ -48,7 +48,8 @@ public class Main {
             }
 
             out.println(line);
-            Commands.handle(main, line);
+            if (!Commands.handle(main, line))
+                out.println("UNKNOWN COMMAND: " + line);
         }
 
         out.println("EXITING.");

@@ -46,17 +46,17 @@ public final class Commands {
         return cmd.cmd.equals("token");
     }
 
-    public static void handle(@NotNull Main main, @NotNull String line) throws IOException {
+    public static boolean handle(@NotNull Main main, @NotNull String line) throws IOException {
         String[] split = line.split("\\s");
         String cmd = split[0];
 
         for (AbsCommand abs : COMMANDS) {
             if (abs.cmd.equals(cmd)) {
                 abs.handle(main, line);
-                return;
+                return true;
             }
         }
 
-        throw new IllegalArgumentException("Unknown command: " + line);
+        return false;
     }
 }
