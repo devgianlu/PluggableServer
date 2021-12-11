@@ -9,7 +9,8 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.FileUtils;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +29,7 @@ import java.util.regex.Pattern;
  * @author Gianlu
  */
 public class Applications {
-    private final static Logger LOGGER = Logger.getLogger(Applications.class);
+    private final static Logger LOGGER = LogManager.getLogger(Applications.class);
     private static final MaintenanceHandler MAINTENANCE_HANDLER = new MaintenanceHandler();
     final File componentsDir;
     private final Handler handler;

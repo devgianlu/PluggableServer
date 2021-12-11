@@ -3,7 +3,8 @@ package com.gianlu.pluggableserver.core;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.xnio.streams.Streams;
 
@@ -19,7 +20,7 @@ import java.util.zip.ZipOutputStream;
  * @author Gianlu
  */
 public class CloudStorageApi {
-    private static final Logger LOGGER = Logger.getLogger(CloudStorageApi.class);
+    private static final Logger LOGGER = LogManager.getLogger(CloudStorageApi.class);
     private final String bucket;
     private final Storage storage;
 

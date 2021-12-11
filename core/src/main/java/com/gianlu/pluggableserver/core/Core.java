@@ -8,7 +8,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.undertow.Undertow;
 import io.undertow.server.RoutingHandler;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -18,8 +19,7 @@ import java.net.MalformedURLException;
  * @author Gianlu
  */
 public class Core implements StateListener {
-    private static final Logger LOGGER = Logger.getLogger(Core.class);
-    private final static JsonParser PARSER = new JsonParser();
+    private static final Logger LOGGER = LogManager.getLogger(Core.class);
     private final Undertow undertow;
     private final Applications applications;
     private final int port;
@@ -128,7 +128,7 @@ public class Core implements StateListener {
     @Override
     public JsonObject readStateJson() {
         try (InputStream in = new FileInputStream(stateFile)) {
-            JsonElement element = PARSER.parse(new InputStreamReader(in));
+            JsonElement element = JsonParser.parseReader(new InputStreamReader(in));
             if (element == null) {
                 LOGGER.info("State file is empty!");
                 return null;

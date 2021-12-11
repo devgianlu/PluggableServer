@@ -2,7 +2,7 @@ package com.gianlu.pluggableserver.core;
 
 import com.google.gson.JsonObject;
 import io.undertow.server.HttpServerExchange;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

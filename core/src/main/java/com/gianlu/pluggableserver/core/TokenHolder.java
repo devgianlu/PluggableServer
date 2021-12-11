@@ -1,6 +1,7 @@
 package com.gianlu.pluggableserver.core;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Gianlu
  */
 public class TokenHolder {
-    private static final Logger LOGGER = Logger.getLogger(TokenHolder.class);
+    private static final Logger LOGGER = LogManager.getLogger(TokenHolder.class);
     private static TokenHolder instance;
     private final AtomicReference<String> token = new AtomicReference<>();
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
